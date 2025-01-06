@@ -7,6 +7,7 @@ namespace Tests\Unit\Services;
 use App\Services\JWTCodec;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
@@ -16,9 +17,9 @@ class JWTCodecTest extends TestCase
     {
         parent::setUp();
 
-        config()->set('jwt.secret_key', 'random_secret_key');
+        Config::set('jwt.secret_key', 'random_secret_key');
 
-        config()->set('jwt.algorithm', 'HS256');
+        Config::set('jwt.algorithm', 'HS256');
 
         $this->jwtCodec = new JWTCodec();
     }
