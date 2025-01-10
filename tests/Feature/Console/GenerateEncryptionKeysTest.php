@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Console;
 
 use App\Console\Commands\GenerateEncryptionKeys;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 use phpseclib3\Crypt\PublicKeyLoader;
@@ -14,6 +15,10 @@ use Tests\TestCase;
 
 class GenerateEncryptionKeysTest extends TestCase
 {
+    private string $publicKey;
+    private string $privateKey;
+    private Filesystem $localDisk;
+
     protected function setUp(): void
     {
         parent::setUp();
