@@ -51,7 +51,7 @@ class GenerateEncryptionKeys extends Command
 
         $privateKey = config('jwt.encryption_keys.private_key_filename');
 
-        $disk = Storage::build(['driver' => 'local', 'root' => storage_path('keys')]);
+        $disk = get_encryption_keys_storage_disk();
 
         if (($disk->exists($publicKey) || $disk->exists($privateKey)) && ! $this->option('force')) {
             $this->error('Encryption keys already exist. Use the --force option to overwrite them.');

@@ -21,12 +21,15 @@ return [
     |--------------------------------------------------------------------------
     |
     | JWT uses encryption keys while generating secure access tokens for your
-    | application. By default, the keys are stored as local files.
-    | The filenames of the files are set below.
+    | application. By default, the keys are stored as local files but can
+    | be set via environment variables when that is more convenient.
     |
     */
     'encryption_keys' => [
+        'private_key' => env('JWT_PRIVATE_KEY'),
         'private_key_filename' => env('JWT_PRIVATE_KEY_FILENAME', 'auth_private.key'),
+
+        'public_key' => env('JWT_PUBLIC_KEY'),
         'public_key_filename' => env('JWT_PUBLIC_KEY_FILENAME', 'auth_public.key'),
     ],
 ];
