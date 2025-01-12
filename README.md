@@ -44,7 +44,7 @@ DB_PASSWORD=your_password
 
 ## Next Steps
 
-Read the [tutorial](simioluwatomi.com/laravel-api-authentication-using-firebase-php-jwt) to follow along.
+Read the [tutorial](https://simioluwatomi.com/laravel-api-authentication-using-firebase-php-jwt) to follow along.
 
 ## License
 
