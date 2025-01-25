@@ -32,4 +32,15 @@ return [
         'public_key' => env('JWT_PUBLIC_KEY'),
         'public_key_filename' => env('JWT_PUBLIC_KEY_FILENAME', 'auth_public.key'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Token Lifetime Expiry
+    |--------------------------------------------------------------------------
+    |
+    | Here you may define the amount in hours before authentication tokens expire
+    |
+    */
+
+    'token_lifetime' => env('JWT_TOKEN_LIFETIME', 1),
 ];
