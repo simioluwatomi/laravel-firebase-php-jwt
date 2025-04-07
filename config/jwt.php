@@ -44,4 +44,6 @@ return [
     */
 
     'token_lifetime' => env('JWT_TOKEN_LIFETIME', 60),
+
+    'two_factor_token_lifetime' => env('JWT_TWO_FACTOR_TOKEN_LIFETIME', 15),
 ];

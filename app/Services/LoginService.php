@@ -1,12 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Builders\JwtPayloadBuilder;
+use App\Events\TwoFactorChallengeInitiated;
 use App\Guards\JwtGuard;
 use App\Models\User;
 use App\Support\DataTransferObjects\AuthenticationResponse;
 use App\Support\DataTransferObjects\LoginDataTransferObject;
+use App\Support\Enums\JsonWebTokenScope;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Events\Authenticated;
 use Illuminate\Support\Carbon;
@@ -31,9 +35,16 @@ class LoginService
         /** @var User $user */
         $user = $guard->getLastAttempted();
 
-        $payload = (new JwtPayloadBuilder($user))
-            ->issuedNow()
-            ->getPayload();
+        $builder = (new JwtPayloadBuilder($user))->issuedNow();
+
+        if ($user->hasTwoFactorAuthenticationEnabled()) {
+            $builder->lifetimeInMinutes(config('jwt.two_factor_token_lifetime'))
+                ->addScope(JsonWebTokenScope::TWO_FACTOR_SCOPE);
+        } else {
+            $builder->addScope(JsonWebTokenScope::ALL_SCOPES);
+        }
+
+        $payload = $builder->getPayload();
 
         $token = $this->codec->encode($payload);
 
@@ -46,9 +57,12 @@ class LoginService
             $user,
             $token,
             Carbon::parse($payload['exp']),
+            $user->hasTwoFactorAuthenticationEnabled()
         );
 
-        event(new Authenticated('jwt', $user));
+        $user->hasTwoFactorAuthenticationEnabled()
+            ? event(new TwoFactorChallengeInitiated($user))
+            : event(new Authenticated('jwt', $user));
 
         return $response;
     }
