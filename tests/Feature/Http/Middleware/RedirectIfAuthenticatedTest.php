@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Feature\Http\Middleware;
+namespace Tests\Feature\Http\Middleware;
 
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Models\User;
@@ -15,6 +15,7 @@ use Tests\TestCase;
 class RedirectIfAuthenticatedTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_it_allows_request_when_user_is_not_authenticated()
     {
         $request = Request::create('/login', 'GET');

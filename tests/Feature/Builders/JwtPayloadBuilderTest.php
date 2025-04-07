@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Feature\Builders;
+namespace Tests\Feature\Builders;
 
 use App\Builders\JwtPayloadBuilder;
 use App\Models\User;
+use App\Support\Enums\JsonWebTokenScope;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -29,6 +30,7 @@ class JwtPayloadBuilderTest extends TestCase
         static::assertArrayHasKey('iss', $payload);
         static::assertEquals('https://example.com', $payload['iss']);
         static::assertArrayHasKey('exp', $payload);
+        static::assertNotNull($payload['exp']);
     }
 
     public function test_it_adds_custom_claim()
@@ -47,11 +49,11 @@ class JwtPayloadBuilderTest extends TestCase
         $user = User::factory()->create();
 
         $payload = (new JwtPayloadBuilder($user))
-            ->withClaims(['role' => 'admin', 'scope' => 'read:write'])
+            ->withClaims(['role' => 'admin', 'scope' => 'read write'])
             ->getPayload();
 
         static::assertEquals('admin', $payload['role']);
-        static::assertEquals('read:write', $payload['scope']);
+        static::assertEquals('read write', $payload['scope']);
     }
 
     public function test_it_calculates_expiration_correctly()
@@ -61,10 +63,10 @@ class JwtPayloadBuilderTest extends TestCase
         $user = User::factory()->create();
 
         $payload = (new JwtPayloadBuilder($user))
-            ->lifetimeInHours(2)
+            ->lifetimeInMinutes(30)
             ->getPayload();
 
-        static::assertEquals($now->addHours(2)->getTimestamp(), $payload['exp']);
+        static::assertEquals($now->addMinutes(30)->getTimestamp(), $payload['exp']);
     }
 
     public function test_it_sets_issued_time_claims()
@@ -92,5 +94,173 @@ class JwtPayloadBuilderTest extends TestCase
             $builder1->getPayload()['jti'],
             $builder2->getPayload()['jti']
         );
+    }
+
+    public function test_without_claim_can_not_remove_default_claims()
+    {
+        config()->set('app.url', 'https://example.com');
+
+        $user = User::factory()->create();
+
+        $payload = (new JwtPayloadBuilder($user))
+            ->withoutClaim('sub')
+            ->withoutClaim('jti')
+            ->withoutClaim('iss')
+            ->withoutClaim('exp')
+            ->getPayload();
+
+        static::assertArrayHasKey('sub', $payload);
+        static::assertEquals($user->id, $payload['sub']);
+        static::assertArrayHasKey('jti', $payload);
+        static::assertNotNull($payload['jti']);
+        static::assertArrayHasKey('iss', $payload);
+        static::assertEquals('https://example.com', $payload['iss']);
+        static::assertArrayHasKey('exp', $payload);
+        static::assertNotNull($payload['exp']);
+    }
+
+    public function test_without_claim_removes_non_default_claims()
+    {
+        $user = User::factory()->create();
+
+        $payload = (new JwtPayloadBuilder($user))
+            ->withClaims(['role' => 'admin', 'scope' => 'read write'])
+            ->withoutClaim('role')
+            ->getPayload();
+
+        static::assertArrayNotHasKey('role', $payload);
+    }
+
+    public function test_it_adds_a_single_scope()
+    {
+        $user = User::factory()->create();
+        $builder = new JwtPayloadBuilder($user);
+
+        $payload = $builder->addScope(JsonWebTokenScope::READ_SCOPE)->getPayload();
+
+        static::assertArrayHasKey('scope', $payload);
+        static::assertEquals('read', $payload['scope']);
+    }
+
+    public function test_it_adds_multiple_scopes()
+    {
+        $user = User::factory()->create();
+        $builder = new JwtPayloadBuilder($user);
+
+        $payload = $builder
+            ->addScope(JsonWebTokenScope::READ_SCOPE)
+            ->addScope(JsonWebTokenScope::WRITE_SCOPE)
+            ->getPayload();
+
+        static::assertArrayHasKey('scope', $payload);
+        static::assertEquals('read write', $payload['scope']);
+    }
+
+    public function test_it_does_not_add_duplicate_scopes()
+    {
+        $user = User::factory()->create();
+        $builder = new JwtPayloadBuilder($user);
+
+        $payload = $builder
+            ->addScope(JsonWebTokenScope::READ_SCOPE)
+            ->addScope(JsonWebTokenScope::READ_SCOPE)
+            ->getPayload();
+
+        static::assertArrayHasKey('scope', $payload);
+        static::assertEquals('read', $payload['scope']);
+    }
+
+    public function test_it_does_not_add_invalid_scopes()
+    {
+        $user = User::factory()->create();
+        $builder = new JwtPayloadBuilder($user);
+
+        $payload = $builder->addScope(JsonWebTokenScope::INVALID_SCOPE)->getPayload();
+
+        static::assertArrayNotHasKey('scope', $payload);
+    }
+
+    public function test_it_removes_scopes()
+    {
+        $user = User::factory()->create();
+        $builder = new JwtPayloadBuilder($user);
+
+        $payload = $builder
+            ->addScope(JsonWebTokenScope::READ_SCOPE)
+            ->addScope(JsonWebTokenScope::WRITE_SCOPE)
+            ->removeScope(JsonWebTokenScope::READ_SCOPE)
+            ->getPayload();
+
+        static::assertArrayHasKey('scope', $payload);
+        static::assertEquals('write', $payload['scope']);
+    }
+
+    public function test_it_removes_scope_claim_when_all_scopes_removed()
+    {
+        $user = User::factory()->create();
+        $builder = new JwtPayloadBuilder($user);
+
+        $payload = $builder
+            ->addScope(JsonWebTokenScope::READ_SCOPE)
+            ->removeScope(JsonWebTokenScope::READ_SCOPE)
+            ->getPayload();
+
+        static::assertArrayNotHasKey('scope', $payload);
+    }
+
+    public function test_it_replaces_existing_scopes_when_all_scopes_added()
+    {
+        $user = User::factory()->create();
+        $builder = new JwtPayloadBuilder($user);
+
+        $payload = $builder
+            ->addScope(JsonWebTokenScope::READ_SCOPE)
+            ->addScope(JsonWebTokenScope::WRITE_SCOPE)
+            ->addScope(JsonWebTokenScope::ALL_SCOPES)
+            ->getPayload();
+
+        static::assertArrayHasKey('scope', $payload);
+        static::assertEquals('*', $payload['scope']);
+    }
+
+    public function test_it_throws_exception_when_adding_two_factor_scope_with_all_scopes()
+    {
+        $user = User::factory()->create();
+        $builder = new JwtPayloadBuilder($user);
+
+        $builder->addScope(JsonWebTokenScope::ALL_SCOPES);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Can not add 2FA challenge scope when all scopes are granted.');
+
+        $builder->addScope(JsonWebTokenScope::TWO_FACTOR_SCOPE);
+    }
+
+    public function test_it_throws_exception_when_adding_all_scopes_with_two_factor_scope()
+    {
+        $user = User::factory()->create();
+        $builder = new JwtPayloadBuilder($user);
+
+        $builder->addScope(JsonWebTokenScope::TWO_FACTOR_SCOPE);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Can not grant all scopes when 2FA challenge scope is present.');
+
+        $builder->addScope(JsonWebTokenScope::ALL_SCOPES);
+    }
+
+    public function test_removing_scopes_does_not_affect_other_claims()
+    {
+        $user = User::factory()->create();
+        $builder = new JwtPayloadBuilder($user);
+
+        $payload = $builder
+            ->withClaim('custom', 'value')
+            ->addScope(JsonWebTokenScope::READ_SCOPE)
+            ->removeScope(JsonWebTokenScope::READ_SCOPE)
+            ->getPayload();
+
+        static::assertArrayHasKey('custom', $payload);
+        static::assertEquals('value', $payload['custom']);
     }
 }
