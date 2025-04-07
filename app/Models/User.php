@@ -26,7 +26,7 @@ use Illuminate\Support\Carbon;
  * @property null|mixed                                                $two_factor_secret
  * @property null|array<array-key, mixed>                              $two_factor_recovery_codes
  * @property null|Carbon                                               $two_factor_disabled_at
- * @property TwoFactorAuthenticationMethod                             $two_factor_method
+ * @property null|TwoFactorAuthenticationMethod                        $two_factor_method
  * @property DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property null|int                                                  $notifications_count
  *

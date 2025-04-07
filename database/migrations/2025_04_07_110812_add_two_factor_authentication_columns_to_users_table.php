@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Support\Enums\TwoFactorAuthenticationMethod;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,7 +17,7 @@ return new class extends Migration
             $table->text('two_factor_secret')->nullable();
             $table->json('two_factor_recovery_codes')->nullable();
             $table->timestamp('two_factor_disabled_at')->nullable();
-            $table->string('two_factor_method')->default(TwoFactorAuthenticationMethod::EMAIL->name);
+            $table->string('two_factor_method')->nullable();
         });
     }
 

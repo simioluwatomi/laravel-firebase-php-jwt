@@ -15,6 +15,13 @@ class JwtPayloadBuilder
 
     private array $scopes = [];
 
+    private array $defaultClaims = [
+        'sub',
+        'jti',
+        'iss',
+        'exp',
+    ];
+
     public function __construct(Authenticatable $user)
     {
         $this->forSubject($user)
@@ -88,6 +95,10 @@ class JwtPayloadBuilder
 
     public function withoutClaim(string $claim): self
     {
+        if (in_array($claim, $this->defaultClaims, true)) {
+            return $this;
+        }
+
         unset($this->payload[$claim]);
 
         return $this;

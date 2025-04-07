@@ -10,6 +10,12 @@ enum JsonWebTokenScope: string
 
     case TWO_FACTOR_SCOPE = '2fa-challenge';
 
+    case READ_SCOPE = 'read';
+
+    case WRITE_SCOPE = 'write';
+
+    case INVALID_SCOPE = '';
+
     public function isValid(): bool
     {
         return ! $this->isInvalid();
