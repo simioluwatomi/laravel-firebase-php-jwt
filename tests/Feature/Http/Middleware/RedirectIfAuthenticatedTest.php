@@ -15,6 +15,7 @@ use Tests\TestCase;
 class RedirectIfAuthenticatedTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_it_allows_request_when_user_is_not_authenticated()
     {
         $request = Request::create('/login', 'GET');

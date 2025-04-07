@@ -12,6 +12,7 @@ use Tests\TestCase;
 class LoginTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_authenticated_users_can_not_log_in()
     {
         $this->withoutExceptionHandling();
