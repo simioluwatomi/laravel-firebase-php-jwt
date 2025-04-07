@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Feature\Guards;
+namespace Tests\Feature\Guards;
 
 use App\Guards\JwtGuard;
 use App\Models\User;
@@ -15,6 +15,7 @@ use Tests\TestCase;
 class JwtGuardTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_user_returns_null_when_no_bearer_token()
     {
         $request = \Mockery::mock(Request::class);

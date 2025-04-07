@@ -38,9 +38,12 @@ return [
     | Token Lifetime Expiry
     |--------------------------------------------------------------------------
     |
-    | Here you may define the amount in hours before authentication tokens expire
+    | Here you may define the amount in minutes before authentication tokens
+    | expire
     |
     */
 
-    'token_lifetime' => env('JWT_TOKEN_LIFETIME', 1),
+    'token_lifetime' => env('JWT_TOKEN_LIFETIME', 60),
+
+    'two_factor_token_lifetime' => env('JWT_TWO_FACTOR_TOKEN_LIFETIME', 15),
 ];

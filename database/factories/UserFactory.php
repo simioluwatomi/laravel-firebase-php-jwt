@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Models\User;
+use App\Support\Enums\TwoFactorAuthenticationMethod;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -42,6 +43,30 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that two factor should be disabled for the model.
+     */
+    public function twoFactorDisabled(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'two_factor_disabled_at' => now(),
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_method' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that email two factor should be enabled for the model.
+     */
+    public function emailTwoFactorEnabled(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'two_factor_disabled_at' => null,
+            'two_factor_method' => TwoFactorAuthenticationMethod::EMAIL,
         ]);
     }
 }
