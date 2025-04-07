@@ -4,8 +4,16 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Builders\JwtPayloadBuilder;
 use App\Models\User;
+use App\Support\DataTransferObjects\AuthenticationResponse;
+use App\Support\Enums\JsonWebTokenScope;
 use App\Support\Enums\TwoFactorAuthenticationMethod;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Auth\Events\Authenticated;
+use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use OTPHP\TOTP;
 use ParagonIE\ConstantTime\Base32;
 
@@ -60,5 +68,59 @@ class TwoFactorAuthenticationService
         $totp->setLabel($label);
 
         return $totp;
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    public function completeTwoFactorChallenge(User $user, string $otp): AuthenticationResponse
+    {
+        throw_if(
+            ! $user->hasTwoFactorAuthenticationEnabled(),
+            new AuthorizationException('Two factor authentication is not enabled for this user.')
+        );
+
+        $isValidOneTimePassword = $this->verifyOneTimePassword($user, $otp);
+
+        throw_if(
+            ! $isValidOneTimePassword,
+            ValidationException::withMessages(['code' => ['The code is invalid.']])
+        );
+
+        $payload = (new JwtPayloadBuilder($user))
+            ->issuedNow()
+            ->addScope(JsonWebTokenScope::ALL_SCOPES)
+            ->getPayload();
+
+        $token = app()->make(JWTCodec::class)->encode($payload);
+
+        throw_if(
+            $token === null,
+            new AuthenticationException('Failed to generate authentication token.'),
+        );
+
+        $response = new AuthenticationResponse(
+            $user,
+            $token,
+            Carbon::parse($payload['exp']),
+            false
+        );
+
+        event(new Authenticated('jwt', $user));
+
+        return $response;
+    }
+
+    /**
+     * Verify a time-based one-time password (TOTP).
+     */
+    public function verifyOneTimePassword(User $user, string $otp): bool
+    {
+        if ($user->two_factor_secret === null) {
+            return false;
+        }
+
+        return $this->createTOTP($user->two_factor_secret, $user->email, $user->two_factor_method)
+            ->verify($otp, null, 1);
     }
 }

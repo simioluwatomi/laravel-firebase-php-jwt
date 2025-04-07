@@ -70,8 +70,10 @@ class LoginServiceTest extends TestCase
         $responseArray = $response->toArray();
 
         static::assertInstanceOf(AuthenticationResponse::class, $response);
+        static::assertNotNull($responseArray['user']);
         static::assertNotNull($responseArray['token']['access_token']);
         static::assertNotNull($responseArray['token']['expires_at']);
+        static::assertNull($responseArray['two_factor_method']);
         static::assertTrue(now()->diffInMinutes(now()->parse((int) $responseArray['token']['expires_at'])) > 58);
         static::assertFalse($responseArray['requires_two_factor_challenge']);
         Event::assertDispatched(fn (Authenticated $event) => $event->user->is($user) && $event->guard = 'jwt');
@@ -93,8 +95,10 @@ class LoginServiceTest extends TestCase
         $responseArray = $response->toArray();
 
         static::assertInstanceOf(AuthenticationResponse::class, $response);
+        static::assertNull($responseArray['user']);
         static::assertNotNull($responseArray['token']['access_token']);
         static::assertNotNull($responseArray['token']['expires_at']);
+        static::assertEquals('email', $responseArray['two_factor_method']);
         static::assertTrue(now()->diffInMinutes(now()->parse((int) $responseArray['token']['expires_at'])) < 20);
         static::assertTrue($responseArray['requires_two_factor_challenge']);
         Event::assertDispatched(fn (TwoFactorChallengeInitiated $event) => $event->user->is($user));
