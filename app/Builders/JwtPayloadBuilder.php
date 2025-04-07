@@ -17,7 +17,7 @@ class JwtPayloadBuilder
         $this->forSubject($user)
             ->generateIdentifier()
             ->issuedBy(config('app.url'))
-            ->lifetimeInHours(config('jwt.token_lifetime'));
+            ->lifetimeInMinutes(config('jwt.token_lifetime'));
     }
 
     public function withClaim(string $claim, bool|float|int|string $value): self
@@ -36,9 +36,9 @@ class JwtPayloadBuilder
         return $this;
     }
 
-    public function lifetimeInHours(int $hours): self
+    public function lifetimeInMinutes(int $minutes): self
     {
-        return $this->withClaim('exp', Carbon::now()->addHours(abs($hours))->getTimestamp());
+        return $this->withClaim('exp', Carbon::now()->addMinutes(abs($minutes))->getTimestamp());
     }
 
     public function issuedNow(): self

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Feature\Builders;
+namespace Tests\Feature\Builders;
 
 use App\Builders\JwtPayloadBuilder;
 use App\Models\User;
@@ -61,10 +61,10 @@ class JwtPayloadBuilderTest extends TestCase
         $user = User::factory()->create();
 
         $payload = (new JwtPayloadBuilder($user))
-            ->lifetimeInHours(2)
+            ->lifetimeInMinutes(30)
             ->getPayload();
 
-        static::assertEquals($now->addHours(2)->getTimestamp(), $payload['exp']);
+        static::assertEquals($now->addMinutes(30)->getTimestamp(), $payload['exp']);
     }
 
     public function test_it_sets_issued_time_claims()

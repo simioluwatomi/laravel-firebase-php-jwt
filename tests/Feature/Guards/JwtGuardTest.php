@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Feature\Guards;
+namespace Tests\Feature\Guards;
 
 use App\Guards\JwtGuard;
 use App\Models\User;
