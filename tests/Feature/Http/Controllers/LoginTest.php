@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Feature\Http\Controllers;
+namespace Tests\Feature\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;

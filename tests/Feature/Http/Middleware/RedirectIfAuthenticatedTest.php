@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Feature\Http\Middleware;
+namespace Tests\Feature\Http\Middleware;
 
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Models\User;
